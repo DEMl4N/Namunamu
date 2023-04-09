@@ -1,0 +1,18 @@
+{
+    "manifest_version": 2,
+    "name": "Namunamu",
+    "description": "Hi CUK",
+    "version": "1.0.0",
+    "permissions": [
+      "activeTab"
+    ],
+    "content_scripts": [{
+      "matches": ["https://e-cyber.catholic.ac.kr/*"],
+      "js": ["content.js"]
+    }],
+    "background": {
+      "scripts": ["background.js"],
+      "persistent": false
+    },
+    "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
+  }
