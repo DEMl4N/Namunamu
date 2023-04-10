@@ -3,23 +3,43 @@
 
 const toDoList =
 [
-    "핵심취업",
-    "웹서비스"
+
 ]
 
 const cuk_URI = "https://e-cyber.catholic.ac.kr/ilos/main/main_form.acl"
 const course_URI = "https://e-cyber.catholic.ac.kr/ilos/st/course/submain_form.acl"
 const online_lecture_URI = "https://e-cyber.catholic.ac.kr/ilos/st/course/online_list_form.acl"
 const online__view_URI = "https://e-cyber.catholic.ac.kr/ilos/st/course/online_view_form.acl"
-let observers = []
 
-function time_to_seconds(time) {
-    const [hours, minutes, seconds] = time.split(':').map(Number);
-    return (hours * 60 * 60) + (minutes * 60) + seconds;
+let streaming_lecture = null
+let streaming_time = 0
+
+async function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-function init_observers() {
-    observers = []
+function time_to_seconds(time) {
+    const time_to_string = time.value[0]
+    const [hours, minutes, seconds] = time_to_string.split(':').map(Number)
+    let iterator = 1
+    let res = 0
+
+    if (seconds !== undefined) {
+        res += seconds * iterator
+        iterator *= 60
+    }
+
+    if (minutes !== undefined) {
+        res += minutes * iterator
+        iterator *= 60
+    }
+
+    if (hours !== undefined) {
+        res += hours * iterator
+        //iterator *= 24
+    }
+
+    return res
 }
 
 function cuk_main() {
@@ -31,7 +51,6 @@ function cuk_main() {
         lectures.filter(element => {
             for (const lectureName of toDoList){
                 if (element.innerHTML.includes(lectureName)){
-                    console.log(element.innerHTML)
                     return true
                 }
             }
@@ -44,56 +63,83 @@ function course() {
     window.location.href = online_lecture_URI
 }
 
-function online_lecture() {
+async function online_lecture() {
+    //debugger;
     let weekly_lectures = document.getElementsByClassName("ibox3 wb wb-on ")
+
     for (weekly_lecture_element of weekly_lectures) {
 
         // complete weekly lectures
         if (weekly_lecture_element.innerHTML.includes("1/1")) {
             continue
         }
-
-        const lecture_list_observer = new MutationObserver((lecture_form) => {
-            let lecture_list = lecture_form.getElementsByClassName("lecture-box")
-            console.log(lecture_list)
-            take_every_lectures(lecture_list)
-        })
-        
-        lecture_list_observer.observe(document, { childList: true, subtree: true })
-        observers.push(lecture_list_observer)
         
         weekly_lecture_element.click()
+
+        // find element 10 times for 3 seconds
+        for (let i = 1; i <= 10; i++) {
+            console.log(i)
+            await delay(300)
+            let lecture_form = document.getElementById("lecture_form")
+
+            const is_good_to_go = 
+            !lecture_form.innerText.includes("학습 기간이 아닙니다.") 
+            && 
+            lecture_form.getElementsByClassName('loader').length == 0;
+    
+            if (is_good_to_go) {
+                let lecture_list = lecture_form.getElementsByClassName("lecture-box")
+                console.log(lecture_list)
+                parse_lectures(lecture_list)
+                break
+            }
+        }
+
+        if (streaming_lecture !== null && streaming_time != 0) {
+            break
+        }
     }
 }
 
-function take_every_lectures(lecture_list) {
-
-    for (lecturebox of lecture_list){
+function parse_lectures(lecture_list) {
+    for (lecturebox of lecture_list) {
         const view_buttons = lecturebox.getElementsByClassName("site-mouseover-color")
-        var idx = 0
+        const per_text = lecturebox.querySelectorAll("#per_text")
 
-        console.log(`This is it. ${view_button}`)
+        for (let i = 0; i < view_buttons.length; i++) {
+            const view_button = view_buttons[i]
 
-        for (var view_button of view_buttons) {
-            const remained_seconds = calcutate_remained_seconds(idx, lecturebox)
-            idx++
+            const dates = lecturebox.innerHTML.matchAll(/\d{12}/g)
+            const start_date = dates.next()
+            const now_date = dates.next()
+            const end_date = dates.next()
 
-            if (!remained_seconds){
+            if (now_date < start_date || now_date > end_date) {
+                break
+            }
+            
+            const per_text_now = per_text[i].innerText
+            const percentage = per_text_now.match(/\d+/)[0]
+
+            if (percentage > 95) {
                 continue
             }
 
-            view_button.click()
+            const remained_seconds = calcutate_remained_seconds(i, lecturebox)
+            streaming_lecture = view_button
+            streaming_time = remained_seconds
 
-            chrome.runtime.sendMessage({remained_seconds: remained_seconds}, (response) => {
-                console.log(response.message)
-            })
+            
+            if (streaming_lecture !== null && streaming_time != 0){
+                start_streaming()
+                break
+            }
         }
     }
-
 }
 
-function calcutate_remained_seconds(idx, lectureElement) {
-    const lecture_html = lecture.innerHTML
+function calcutate_remained_seconds(idx, lecturebox) {
+    const lecture_html = lecturebox.innerHTML
     let remained_second = 0
     const regex_time = /(\d+):(\d{2}):(\d{2})|(\d{1,2}):(\d{2})(?!\d)/g     // "HH:MM:SS or MM:SS"
     const time_format_iterator = lecture_html.matchAll(regex_time)
@@ -103,7 +149,7 @@ function calcutate_remained_seconds(idx, lectureElement) {
     }
 
     // skip to present lecture time
-    for (var i = 0; i <= idx; i++) {
+    for (var i = 0; i < idx; i++) {
         time_format_iterator.next()
         time_format_iterator.next()
     }
@@ -123,6 +169,14 @@ function calcutate_remained_seconds(idx, lectureElement) {
     return (remained_second > 0)? remained_second : 0
 }
 
+function start_streaming() {
+    chrome.runtime.sendMessage({remained_second: streaming_time}, function(response) {
+        console.log(response.message);
+    });
+
+    streaming_lecture.click()
+}
+
 if (window.location.href == cuk_URI) {
     if (confirm("나무나무를 시작하시겠습니까?")){
         localStorage.setItem('isExtensionOn', JSON.stringify(true))
@@ -130,8 +184,6 @@ if (window.location.href == cuk_URI) {
     else {
         localStorage.setItem('isExtensionOn', JSON.stringify(false))
     }
-
-    init_observers()
 
     if (JSON.parse(localStorage.getItem('isExtensionOn')) == true){
         cuk_main()
@@ -145,13 +197,13 @@ if (window.location.href == course_URI) {
     }
 }
 
-if (window.location.href == online_lecture_URI) {
+if (window.location.href.includes(online_lecture_URI)) {
     if (JSON.parse(localStorage.getItem('isExtensionOn')) == true) {
         online_lecture()
     }
 }
 
-if (window.location.href == online__view_URI) {
+if (window.location.href.includes(online__view_URI)) {
     if (JSON.parse(localStorage.getItem('isExtensionOn')) == true) {
         chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
             if (message === 'course_done') {
