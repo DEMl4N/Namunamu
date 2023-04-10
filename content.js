@@ -1,8 +1,6 @@
 // Made by 김뀨뀨
 //import { toDoList } from "./list.js"
 
-debugger;
-
 const toDoList =
 [
     "핵심취업",
@@ -13,6 +11,7 @@ const cuk_URI = "https://e-cyber.catholic.ac.kr/ilos/main/main_form.acl"
 const course_URI = "https://e-cyber.catholic.ac.kr/ilos/st/course/submain_form.acl"
 const online_lecture_URI = "https://e-cyber.catholic.ac.kr/ilos/st/course/online_list_form.acl"
 const online__view_URI = "https://e-cyber.catholic.ac.kr/ilos/st/course/online_view_form.acl"
+let observers = []
 
 function time_to_seconds(time) {
     const [hours, minutes, seconds] = time.split(':').map(Number);
@@ -24,15 +23,17 @@ function cuk_main() {
 
     var lectures = Array.from(document.getElementsByClassName("sub_open"))
 
-    lectures.filter(element => {
-        for (const lectureName of toDoList){
-            if (element.innerHTML.includes(lectureName)){
-                console.log(element.innerHTML)
-                return true
+    if (toDoList.length == 0) {
+        lectures.filter(element => {
+            for (const lectureName of toDoList){
+                if (element.innerHTML.includes(lectureName)){
+                    console.log(element.innerHTML)
+                    return true
+                }
             }
-        }
-        return false
-    })
+            return false
+        })
+    }
 }
 
 function course() {
@@ -48,21 +49,20 @@ function online_lecture() {
             continue
         }
 
-        let lectures_list = null
-
-        const observer_lectures_list = new MutationObserver(() => {
-            lectures_list = document.getElementsByClassName("lecture-box")
-            console.log(lectures_list)
-            take_every_lectures(weekly_lecture_element, lectures_list)
+        const lecture_list_observer = new MutationObserver((lecture_form) => {
+            let lecture_list = lecture_form.getElementsByClassName("lecture-box")
+            console.log(lecture_list)
+            take_every_lectures(lecture_list)
         })
         
-        observer_lectures_list.observe(document, {childList: true, subtree: true})
+        lecture_list_observer.observe(document, {childList: true, subtree: true})
+        observers.push(lecture_list_observer)
         
         weekly_lecture_element.click()
     }
 }
 
-function take_every_lectures(weekly_lecture_element, lectures_list) {
+function take_every_lectures(lecture_list) {
 
     for (lecturebox of lectures_list){
         const view_buttons = lecturebox.getElementsByClassName("site-mouseover-color")
@@ -134,19 +134,19 @@ if (window.location.href == cuk_URI) {
 }
 
 if (window.location.href == course_URI) {
-    if (JSON.parse(localStorage.getItem('isExtensionOn')) == true){
+    if (JSON.parse(localStorage.getItem('isExtensionOn')) == true) {
         course()
     }
 }
 
 if (window.location.href == online_lecture_URI) {
-    if (JSON.parse(localStorage.getItem('isExtensionOn')) == true){
+    if (JSON.parse(localStorage.getItem('isExtensionOn')) == true) {
         online_lecture()
     }
 }
 
 if (window.location.href == online__view_URI) {
-    if (JSON.parse(localStorage.getItem('isExtensionOn')) == true){
+    if (JSON.parse(localStorage.getItem('isExtensionOn')) == true) {
         chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
             if (message === 'course_done') {
                 console.log("Done")
