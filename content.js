@@ -18,6 +18,10 @@ function time_to_seconds(time) {
     return (hours * 60 * 60) + (minutes * 60) + seconds;
 }
 
+function init_observers() {
+    observers = []
+}
+
 function cuk_main() {
     console.log(`${cuk_URI} connected`);
 
@@ -55,7 +59,7 @@ function online_lecture() {
             take_every_lectures(lecture_list)
         })
         
-        lecture_list_observer.observe(document, {childList: true, subtree: true})
+        lecture_list_observer.observe(document, { childList: true, subtree: true })
         observers.push(lecture_list_observer)
         
         weekly_lecture_element.click()
@@ -64,7 +68,7 @@ function online_lecture() {
 
 function take_every_lectures(lecture_list) {
 
-    for (lecturebox of lectures_list){
+    for (lecturebox of lecture_list){
         const view_buttons = lecturebox.getElementsByClassName("site-mouseover-color")
         var idx = 0
 
@@ -126,6 +130,8 @@ if (window.location.href == cuk_URI) {
     else {
         localStorage.setItem('isExtensionOn', JSON.stringify(false))
     }
+
+    init_observers()
 
     if (JSON.parse(localStorage.getItem('isExtensionOn')) == true){
         cuk_main()
