@@ -59,6 +59,9 @@ function cuk_main() {
 }
 
 function course() {
+    const title = document.querySelector(".welcome_subject").innerText
+    const lecture_id = title.match(/\((.*?)\)/)[0]
+    sessionStorage.setItem("lecture_id", JSON.stringify(lecture_id))
     window.location.href = online_lecture_URI
 }
 
@@ -75,10 +78,10 @@ async function online_lecture() {
         
         weekly_lecture_element.click()
 
-        // find element 10 times for 3 seconds
-        for (let i = 1; i <= 10; i++) {
+        // find element 5 times for 1 second
+        for (let i = 1; i <= 5; i++) {
             console.log(i)
-            await delay(300)
+            await delay(200)
             let lecture_form = document.getElementById("lecture_form")
 
             const is_early = lecture_form.innerText.includes("학습 기간이 아닙니다.") 
@@ -110,9 +113,8 @@ async function online_lecture() {
         document.querySelector("#subject-span").click()
         delay(300)
         let subject_room = document.querySelector("#subject_room")
-        const title = document.querySelector(".welcome_subject").innerText
-        const lecture_id = title.match(/\((.*?)\)/)[0]
         
+        const lecture_id = JSON.parse(sessionStorage.getItem("lecture_id"))
         const lecture_id_list = JSON.parse(sessionStorage.getItem("lecture_id_list"))
 
         if (lecture_id_list.length > 0) {
