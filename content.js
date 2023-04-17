@@ -121,24 +121,24 @@ async function online_lecture() {
         const lecture_id = JSON.parse(sessionStorage.getItem("lecture_id"))
         const lecture_id_list = JSON.parse(sessionStorage.getItem("lecture_id_list"))
 
-        if (lecture_id_list.length > 0) {
-            const new_lecture_id_list = lecture_id_list.filter(element => !element.includes(lecture_id))
-            sessionStorage.setItem("lecture_id_list", JSON.stringify(new_lecture_id_list))
-            const next_lecture_id = new_lecture_id_list[0].match(/\((.*?)\)/)[0]
-            const lecture_rooms = document.getElementsByClassName("roomGo")
+        const new_lecture_id_list = lecture_id_list.filter(element => !element.includes(lecture_id))
+        sessionStorage.setItem("lecture_id_list", JSON.stringify(new_lecture_id_list))
 
-            for (room of lecture_rooms) {
-                if (room.innerText.includes(next_lecture_id)) {
-                    room.click()
-                }
-            }
-
-            console.log("강의가 왜 없지")
-        }
-        else {
+        if (new_lecture_id_list.length == 0) {
             alert("전 강의 수강 완료")
-            window.location.href = cuk_URI
+            return
         }
+
+        const next_lecture_id = new_lecture_id_list[0].match(/\((.*?)\)/)[0]
+        const lecture_rooms = document.getElementsByClassName("roomGo")
+
+        for (room of lecture_rooms) {
+            if (room.innerText.includes(next_lecture_id)) {
+                room.click()
+            }
+        }
+
+         console.log("강의가 왜 없지")
     }
 }
 
