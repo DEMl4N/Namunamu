@@ -65,7 +65,7 @@ function cuk_main() {
 
 function course() {
     const title = document.querySelector(".welcome_subject").innerText
-    const lecture_id = title.match(/\((.*?)\)/)[0]
+    const lecture_id = title.match(/\(([^\s]{3,})\)$/)[0]
     sessionStorage.setItem("lecture_id", JSON.stringify(lecture_id))
     window.location.href = online_lecture_URI
 }
@@ -130,7 +130,7 @@ async function online_lecture() {
             return
         }
 
-        const next_lecture_id = new_lecture_id_list[0].match(/\((.*?)\)/)[0]
+        const next_lecture_id = new_lecture_id_list[0].match(/\(([^\s]{3,})\)$/)[0]
         const lecture_rooms = document.getElementsByClassName("roomGo")
 
         for (room of lecture_rooms) {
