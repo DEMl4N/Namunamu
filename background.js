@@ -9,3 +9,16 @@ chrome.runtime.onMessage.addListener(function(message, sender, sendResponse) {
       }, message.remained_seconds * 1000);
     }
 });
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  if (request.type == "executeCode") {
+      // Execute the code on the page's context
+      chrome.tabs.executeScript(sender.tab.id, {code: request.code}, function() {
+          // Send a response back to the content script
+          sendResponse({message: "Code executed successfully!"});
+      });
+      console.log(request.code)
+      // Indicate that we want to send a response asynchronously
+      return true;
+  }
+});
