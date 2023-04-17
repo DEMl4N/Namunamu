@@ -60,6 +60,7 @@ function cuk_main() {
     }
 
     sessionStorage.setItem("lecture_id_list", JSON.stringify(lecture_id_list))
+    lectures[0].click()
 }
 
 function course() {
