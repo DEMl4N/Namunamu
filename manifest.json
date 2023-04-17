@@ -4,7 +4,7 @@
     "description": "CUK Online Lecture Streaming Assistant",
     "version": "1.0.0",
     "permissions": [
-      "tabs"
+      "https://e-cyber.catholic.ac.kr/"
     ],
     "content_scripts": [{
       "matches": ["https://e-cyber.catholic.ac.kr/*"],
