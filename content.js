@@ -1,5 +1,4 @@
 // Made by 김뀨뀨
-import { toDoList } from "./list.js"
 
 const cuk_URI = "https://e-cyber.catholic.ac.kr/ilos/main/main_form.acl"
 const course_URI = "https://e-cyber.catholic.ac.kr/ilos/st/course/submain_form.acl"
@@ -8,6 +7,8 @@ const online_view_URI = "https://e-cyber.catholic.ac.kr/ilos/st/course/online_vi
 
 let streaming_lecture = null
 let streaming_time = 0
+
+let toDoList = []
 
 async function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms))
@@ -47,12 +48,15 @@ function cuk_main() {
         lectures.filter(element => {
             for (const lectureName of toDoList){
                 if (element.innerHTML.includes(lectureName)){
-                    lecture_id_list.push(element.innerText)
                     return true
                 }
             }
             return false
         })
+    }
+
+    for (lecture of lectures) {
+        lecture_id_list.push(lecture.innerText)
     }
 
     sessionStorage.setItem("lecture_id_list", JSON.stringify(lecture_id_list))
@@ -120,8 +124,8 @@ async function online_lecture() {
         if (lecture_id_list.length > 0) {
             const new_lecture_id_list = lecture_id_list.filter(element => !element.includes(lecture_id))
             sessionStorage.setItem("lecture_id_list", JSON.stringify(new_lecture_id_list))
-            const next_lecture_id = new_lecture_id_list[0]
-            const lecture_rooms = document.querySelector(".roomGo")
+            const next_lecture_id = new_lecture_id_list[0].match(/\((.*?)\)/)[0]
+            const lecture_rooms = document.getElementsByClassName("roomGo")
 
             for (room of lecture_rooms) {
                 if (room.innerText.includes(next_lecture_id)) {
@@ -142,16 +146,23 @@ function online_view() {
     let running_time = JSON.parse(sessionStorage.getItem("streaming_time"))
     running_time = (running_time !== null)? running_time : 0;
 
+    // ignore time checking message
+    function confirm() { return true }
+    inject_code(confirm)
+
+    /*
+    setTimeout(() => {
+        chrome.runtime.sendMessage({type: "executeCode", code: "window.confirm = function(message){ return true }; console.log('HI')"}, function(response) {
+                console.log(response.message);
+        })}, 1000
+    )
+    */
+
     console.log(running_time)
     setTimeout(() => {
         const exit_button = document.getElementById("close_")
         exit_button.click()
     }, running_time * 1000)
-
-    // ignore time checking message
-    window.confirm = function(message) {
-        return true
-    }
 }
 
 function parse_lectures(lecture_list) {
@@ -225,6 +236,15 @@ function start_streaming() {
     console.log("*(^u^)*");
     sessionStorage.setItem("streaming_time", JSON.stringify(streaming_time))
     streaming_lecture.click()
+}
+
+function inject_code(code) {
+    let code_injection = "" + code + ""
+    let script = document.createElement('script');
+
+    script.textContent = code_injection;
+    (document.body||document.documentElement).appendChild(script);
+    script.remove();
 }
 
 if (window.location.href == cuk_URI) {
