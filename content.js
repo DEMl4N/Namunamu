@@ -42,17 +42,17 @@ function cuk_main() {
     console.log(`${cuk_URI} connected`);
 
     let lecture_id_list = []
-    let lectures = Array.from(document.getElementsByClassName("sub_open"))
-
-    if (toDoList.length != 0) {
-        lectures.filter(element => {
-            for (const lectureName of toDoList){
-                if (element.innerHTML.includes(lectureName)){
-                    return true
-                }
+    let lectures = (Array.from(document.getElementsByClassName("sub_open"))).filter(element => {
+        for (const lectureName of toDoList){
+            if (element.innerHTML.includes(lectureName)){
+                return true
             }
-            return false
-        })
+        }
+        return false
+    })
+
+    if (lectures.length == 0) {
+        lectures = Array.from(document.getElementsByClassName("sub_open"))
     }
 
     for (lecture of lectures) {
